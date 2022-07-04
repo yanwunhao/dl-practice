@@ -41,3 +41,4 @@ class NeuralNetwork(nn.Module):
 
 
 model = NeuralNetwork()
+print(model)
