@@ -41,19 +41,21 @@ def matrix_multiplication_for_conv2d(input, kernel, bias=0, stride=1, padding=0)
 
     for i in range(0, input_h - kernel_h + 1, stride):
         for j in range(0, input_w - kernel_w + 1, stride):
-            computing_region = input[i:i+kernel_h, j:j+kernel_w] + bias
-            output[int(i/stride), int(j/stride)] = torch.sum(torch.mul(kernel, computing_region))
+            computing_region = input[i:i+kernel_h, j:j+kernel_w]
+            output[int(i/stride), int(j/stride)] = torch.sum(torch.mul(kernel, computing_region)) + bias
 
     return output
 
 
 input_image = torch.randn(6, 5)
 convolution_kernel = torch.randn(3, 3)
+bias = torch.randn(1)
 
-mat_mul_conv2d_output = matrix_multiplication_for_conv2d(input_image, convolution_kernel)
+mat_mul_conv2d_output = matrix_multiplication_for_conv2d(input_image, convolution_kernel, bias=bias)
 print(mat_mul_conv2d_output)
 
 # compare to functional api conv2d
 function_api_conv2d_output = F.conv2d(input_image.reshape((1, 1, input_image.shape[0], input_image.shape[1])),\
-                                      convolution_kernel.reshape((1, 1, convolution_kernel.shape[0], convolution_kernel.shape[1])))
+                                      convolution_kernel.reshape((1, 1, convolution_kernel.shape[0], convolution_kernel.shape[1])),\
+                                      padding=0, bias=bias)
 print(function_api_conv2d_output.squeeze(0).squeeze(0))
