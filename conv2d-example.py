@@ -29,7 +29,10 @@ print(f"output_2: {output_feature_map_2}")
 
 
 # implement convolutional operation with matrix operation
-def matrix_multiplication_for_conv2d(input, kernel, stride=1):
+def matrix_multiplication_for_conv2d(input, kernel, bias=0, stride=1, padding=0):
+    if padding > 0:
+        input = F.pad(input, (padding, padding, padding, padding))
+
     input_h, input_w = input.shape
     kernel_h, kernel_w = kernel.shape
     output_h = int(np.floor((input_h - kernel_h) / stride) + 1)
@@ -38,7 +41,7 @@ def matrix_multiplication_for_conv2d(input, kernel, stride=1):
 
     for i in range(0, input_h - kernel_h + 1, stride):
         for j in range(0, input_w - kernel_w + 1, stride):
-            computing_region = input[i:i+kernel_h, j:j+kernel_w]
+            computing_region = input[i:i+kernel_h, j:j+kernel_w] + bias
             output[int(i/stride), int(j/stride)] = torch.sum(torch.mul(kernel, computing_region))
 
     return output
