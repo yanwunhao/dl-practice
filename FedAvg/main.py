@@ -34,6 +34,7 @@ if args.model == "cnn":
 # print(net_glob)
 net_glob.train()
 
+print(dict_users)
 # copy weights
 w_glob = net_glob.state_dict()
 
