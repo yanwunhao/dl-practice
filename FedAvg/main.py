@@ -36,12 +36,6 @@ img_size = dataset_for_train[0][0].shape
 if args.model == "cnn":
     net_glob = CnnForMnist(args).to(args.device)
 
-net_glob.eval()
-acc_train, loss_train = model_evaluation(net_glob, dataset_for_train, args)
-acc_test, loss_test = model_evaluation(net_glob, dataset_for_test, args)
-print("Training Accuracy: {:.2f}".format(acc_train))
-print("Test Accuracy: {:.2f}".format(acc_test))
-
 # print(net_glob)
 net_glob.train()
 
@@ -50,11 +44,6 @@ w_glob = net_glob.state_dict()
 
 # training
 loss_train = []
-cv_loss, cv_acc = [], []
-val_loss_pre, counter = 0, 0
-net_best = None
-best_loss = None
-val_acc_list, net_list = [], []
 
 if args.all_clients:
     print("Aggregation over all clients")
