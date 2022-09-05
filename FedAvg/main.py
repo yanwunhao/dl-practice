@@ -2,10 +2,12 @@ import numpy as np
 import torch
 from torchvision import datasets, transforms
 
-from model.neuralnetwork import CnnForMnist
-from model.federatedupdate import LocalUpdate
 from util.args import args_parser
 from util.sampling import mnist_iid, mnist_noniid
+from model.neuralnetwork import CnnForMnist
+from model.federatedupdate import LocalUpdate
+from model.aggregation import FedAvg
+from model.test import model_evaluation
 
 import copy
 
@@ -33,6 +35,12 @@ img_size = dataset_for_train[0][0].shape
 # build model
 if args.model == "cnn":
     net_glob = CnnForMnist(args).to(args.device)
+
+net_glob.eval()
+acc_train, loss_train = model_evaluation(net_glob, dataset_for_train, args)
+acc_test, loss_test = model_evaluation(net_glob, dataset_for_test, args)
+print("Training Accuracy: {:.2f}".format(acc_train))
+print("Test Accuracy: {:.2f}".format(acc_test))
 
 # print(net_glob)
 net_glob.train()
@@ -67,4 +75,21 @@ for iter in range(args.epochs):
         else:
             w_locals.append(copy.deepcopy(w))
         loss_locals.append(copy.deepcopy(loss))
+
     # update glob weights
+    w_glob = FedAvg(w_locals)
+
+    # copy weights to global model
+    net_glob.load_state_dict(w_glob)
+
+    # print loss
+    loss_avg = sum(loss_locals) / len(loss_locals)
+    print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
+    loss_train.append(loss_avg)
+
+# evaluation
+net_glob.eval()
+acc_train, loss_train = model_evaluation(net_glob, dataset_for_train, args)
+acc_test, loss_test = model_evaluation(net_glob, dataset_for_test, args)
+print("Training Accuracy: {:.2f}".format(acc_train))
+print("Test Accuracy: {:.2f}".format(acc_test))
