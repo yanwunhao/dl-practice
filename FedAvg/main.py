@@ -71,10 +71,14 @@ for iter in range(args.epochs):
     # copy weights to global model
     net_glob.load_state_dict(w_glob)
 
-    # print loss
+    # print loss and acc
     loss_avg = sum(loss_locals) / len(loss_locals)
-    print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
     loss_train.append(loss_avg)
+
+    net_glob.eval()
+    acc_test, loss_test = model_evaluation(net_glob, dataset_for_test, args)
+    print("Round {:3d}, Average loss {:.3f}, Test Accuracy: {:.2f}".format(iter, loss_avg, acc_test))
+    net_glob.train()
 
 # evaluation
 net_glob.eval()
