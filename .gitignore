@@ -130,3 +130,5 @@ dmypy.json
 
 # Playground
 playground.py
+
+data/CelebA/

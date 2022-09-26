@@ -22,12 +22,12 @@ print("Random Seed: ", manualSeed)
 data_root = "../data/CelebA"
 img_size = 64
 batch_size = 128
+lr = 0.0002
 
 feature_map_of_generator = 64
 feature_map_of_discriminator = 64
 
 num_of_channels = 3
-
 latent_dim = 100
 
 
@@ -124,7 +124,15 @@ class Discriminator(nn.Module):
         return self.model(img)
 
 
-discrimintor = Discriminator().to(device)
-discrimintor.apply(weights_init)
+discriminator = Discriminator().to(device)
+discriminator.apply(weights_init)
+print(discriminator)
 
-print(discrimintor)
+adversarial_loss = nn.BCELoss()
+
+real_label = 1.
+fake_label = 0.
+
+optimizerD = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+optimizerG = optim.Adam(generator.parameters(), lr=lr, betas=(0.5, 0.999))
+
