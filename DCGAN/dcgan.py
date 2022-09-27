@@ -1,17 +1,13 @@
-import argparse
-import os
 import random
-import torch
 import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+
+
+from torch.autograd import Variable
+from torchvision.utils import save_image
 
 
 # Set random seed for reproducibility
@@ -19,16 +15,18 @@ manualSeed = 999
 
 print("Random Seed: ", manualSeed)
 
-data_root = "../data/CelebA"
+data_root = "../data/celebA"
 img_size = 64
 batch_size = 128
 lr = 0.0002
+num_epochs = 50
 
 feature_map_of_generator = 64
 feature_map_of_discriminator = 64
-
 num_of_channels = 3
 latent_dim = 100
+
+epoch_interval = 1
 
 
 # Set random seed to random module and
@@ -130,9 +128,62 @@ print(discriminator)
 
 adversarial_loss = nn.BCELoss()
 
-real_label = 1.
-fake_label = 0.
+Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
 optimizerD = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
 optimizerG = optim.Adam(generator.parameters(), lr=lr, betas=(0.5, 0.999))
 
+img_list = []
+G_losses = []
+D_losses = []
+iters = 0
+
+print("Starting Training Loop...")
+# For each epoch
+for epoch in range(num_epochs):
+    for i, data in enumerate(dataloader, 0):
+
+        z = torch.randn(batch_size, latent_dim, 1, 1, device=device)
+        generated_imgs = generator(z)
+
+        # train generator
+        generator.zero_grad()
+
+        expect = Variable(Tensor(generated_imgs.size(0), ).fill_(1.0), requires_grad=False)
+
+        generated_loss = adversarial_loss(discriminator(generated_imgs).view(-1), expect)
+
+        generated_loss.backward()
+
+        optimizerG.step()
+
+        # train discriminator with real_loss
+        discriminator.zero_grad()
+
+        batch_samples = data[0].to(device)
+
+        output = discriminator(batch_samples).view(-1)
+
+        valid = Variable(Tensor(output.size(0), ).fill_(1.0), requires_grad=False)
+
+        real_loss = adversarial_loss(output, valid)
+
+        # train discriminator with fake_loss
+        output = discriminator(generated_imgs.detach()).view(-1)
+
+        fake = Variable(Tensor(output.size(0), ).fill_(0.0), requires_grad=False)
+
+        fake_loss = adversarial_loss(output, fake)
+
+        discriminate_loss = (real_loss + fake_loss) / 2
+        discriminate_loss.backward()
+
+        optimizerD.step()
+
+        print(
+            "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
+            % (epoch+1, num_epochs, i, len(dataloader), discriminate_loss.item(), generated_loss.item())
+        )
+
+    if epoch % epoch_interval == 0:
+        save_image(generated_imgs.data, "images/epoch_%d.png" % epoch+1, nrow=8, normalize=True)
