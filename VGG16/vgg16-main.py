@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from model import VGG16
 
 bs = 128
-num_epochs = 10
+num_epochs = 100
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
 
@@ -44,9 +44,11 @@ def train():
             optimizer.step()
 
             train_loss += loss.item()
-        print(
-            "[Epoch %d/%d] [train loss: %f]"
-            % (epoch + 1, num_epochs, train_loss)
-        )
+            if (batch_idx + 1) % 50 == 0:
+                print(
+                    "[Epoch %d/%d] [Batch %d/%d] [train loss: %f]"
+                    % (epoch + 1, num_epochs, batch_idx + 1, len(train_dataloader), train_loss / 50.)
+                )
+                train_loss = 0
 
 train()
