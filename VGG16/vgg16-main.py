@@ -32,14 +32,14 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 def train():
     for epoch in range(num_epochs):
         train_loss = 0.0
-        for batch_idx, (imgs, label) in enumerate(train_dataloader, 0):
+        for batch_idx, (imgs, labels) in enumerate(train_dataloader, 0):
             optimizer.zero_grad()
 
             imgs = imgs.to(device)
-            label = label.to(device)
+            labels = labels.to(device)
 
-            label_predicted = model(imgs)
-            loss = criterion(label_predicted, label)
+            labels_predicted = model(imgs)
+            loss = criterion(labels_predicted, labels)
             loss.backward()
             optimizer.step()
 
@@ -50,5 +50,18 @@ def train():
                     % (epoch + 1, num_epochs, batch_idx + 1, len(train_dataloader), train_loss / 50.)
                 )
                 train_loss = 0
+
+        total = 0
+        correct = 0
+
+        with torch.no_grad():
+            for (imgs, labels) in test_dataloader:
+                imgs = imgs.to(device)
+                labels = labels.to(device)
+                labels_predicted = model(imgs)
+                _, class_predicted = torch.max(labels_predicted.data, 1)
+                total += labels.size(0)
+                correct += (class_predicted == labels).cpu().sum().item()
+            print('Accuracy on the 10000 test images: %d %% ' % ((100 * correct) / total))
 
 train()
